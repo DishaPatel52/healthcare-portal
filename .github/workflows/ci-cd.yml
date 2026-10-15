@@ -1,0 +1,50 @@
+name: Healthcare CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build-and-test:
+    name: Build & Unit Test
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Run Automated Unit Tests
+        run: node test.js
+
+  package-and-deploy:
+    name: Package & Deploy
+    needs: build-and-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+
+      - name: Package Artifact
+        run: |
+          mkdir build_artifacts
+          tar -czvf build_artifacts/app-release.tar.gz index.js package.json test.js
+
+      - name: Upload Build Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: healthcare-api-artifact
+          path: build_artifacts/
+
+      - name: Deploy Application (Simulation)
+        run: |
+          echo "Simulating zero-downtime production deployment..."
+          echo "Healthcare Portal service deployed successfully!"
